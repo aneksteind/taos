@@ -1,0 +1,19 @@
+[unstable]
+# usually the core library is distributed as a precompiled binary
+# recompiles core and other library crates on-demand
+build-std = ["core", "compiler_builtins", "alloc"]
+
+# these are disabled by default so as to not
+# interfere with the C library implementations, but
+# we aren't taking that with us so we'll use the ones
+# provided in `compiler_builtins`. Provides functions
+# such as `memcpy`
+build-std-features = ["compiler-builtins-mem"]
+
+# target triple specified in the json file
+# https://clang.llvm.org/docs/CrossCompilation.html#target-triple
+[build]
+target = "x86_64-taos.json"
+
+[target.'cfg(target_os = "none")']
+runner = "bootimage runner"

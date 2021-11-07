@@ -1,0 +1,77 @@
+[package]
+name = "taos"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+# This is commented out because x86_64-taos.json specifies the panic behavior
+# Disables unwinding the stack
+# [profile.dev]
+# panic = "abort"
+
+# tell panics to abort by default, because otherwise
+# the default stack unwinding behavior will be expected
+# when a panic occurs
+# [profile.release]
+# panic = "abort"
+
+[dependencies]
+# map virtual memory to all of physical memory
+# the bootloader crate provides a BIOS bootloader that we can use 
+# instead of defining our own -- it launches the kernel
+bootloader = { version = "0.9.8", features = ["map_physical_memory"]}
+volatile = "0.2.6"
+# use a spin lock because we do not have std::sync::Mutex
+spin = "0.5.2"
+# used for sending io to exit device port for shutting down device following tests
+x86_64 = "0.14.2"
+# for communicating test results run in qemu to host
+uart_16550 = "0.2.0"
+# for configuring the programmable interrupt controller (PIC), which handles interrupts such as key strokes
+pic8259 = "0.10.1"
+# for decoding PS/2 key scan codes set 1 and 2
+pc-keyboard = "0.5.0"
+# for dynamic/heap allocation
+linked_list_allocator = "0.9.0"
+
+# for static structures with non-const functions
+[dependencies.lazy_static]
+version = "1.0"
+# provides spin locks without the std library for lazy static variables
+features = ["spin_no_std"]
+
+[dependencies.conquer-once]
+version = "0.2.0"
+default-features = false
+
+[dependencies.futures-util]
+version = "0.3.4"
+default-features = false
+features = ["alloc"]
+
+[dependencies.crossbeam-queue]
+version = "0.2.1"
+# for compatibility with no-std
+default-features = false
+features = ["alloc"]
+
+# allow for exiting QEMU after running tests
+[package.metadata.bootimage]
+test-args = [
+    "-device", "isa-debug-exit,iobase=0xf4,iosize=0x04", "-serial", "stdio",
+    "-display", "none"
+]
+# success code as defined in QemuExitCode
+test-success-exit-code = 33         # (0x10 << 1) | 1
+test-timeout = 300          # (in seconds)
+
+
+[[test]]
+# enables running integration test directly from _start function
+name = "should_panic"
+harness = false
+
+[[test]]
+name = "stack_overflow"
+harness = false
